@@ -23,13 +23,13 @@
       "hero": "Image Compressor",
       "lead": "Reduce photos and images in KB, right in your browser.",
       "upload": "Choose image",
-      "target": "Target size (KB)",
-      "download": "Download compressed image",
-      "note": "JPG, PNG or WebP · up to 25 MiB and 24 MP · exact size not guaranteed.",
+      "target": "Maximum size (KB)",
+      "download": "Download image",
+      "note": "JPG, PNG or WebP · up to 25 MiB · Files stay on your device.",
       "error": "Could not process this file. Use JPG, PNG or WebP within the limits.",
       "status": "Working...",
       "brand": "Image Compressor",
-      "warning": "Quality, format or dimensions may change. Transparency is preserved. Files stay on your device.",
+      "warning": "The image will fit within this size whenever technically possible. Quality, dimensions or format may change.",
       "previewLabel": "Result preview"
     },
     "pt": {
@@ -38,13 +38,13 @@
       "hero": "Compressor de Imagens",
       "lead": "Reduza fotos e imagens em KB, direto no navegador",
       "upload": "Escolher imagem",
-      "target": "Tamanho-alvo (KB)",
-      "download": "Baixar imagem comprimida",
-      "note": "JPG, PNG ou WebP · até 25 MiB e 24 MP · tamanho exato não garantido.",
+      "target": "Tamanho máximo (KB)",
+      "download": "Baixar imagem",
+      "note": "JPG, PNG ou WebP · até 25 MiB · O arquivo não sai do dispositivo.",
       "error": "Não foi possível processar o arquivo. Use JPG, PNG ou WebP dentro dos limites.",
       "status": "Processando...",
       "brand": "Compressor de Imagens",
-      "warning": "A qualidade, o formato ou as dimensões podem mudar. A transparência é preservada. O arquivo não sai do dispositivo.",
+      "warning": "A imagem ficará dentro desse limite sempre que tecnicamente possível. A qualidade, as dimensões ou o formato podem mudar.",
       "previewLabel": "Prévia do resultado"
     },
     "es": {
@@ -53,13 +53,13 @@
       "hero": "Compresor de Imágenes",
       "lead": "Reduce fotos e imágenes en KB, directamente en tu navegador.",
       "upload": "Elegir imagen",
-      "target": "Tamaño objetivo (KB)",
-      "download": "Descargar imagen comprimida",
-      "note": "JPG, PNG o WebP · hasta 25 MiB y 24 MP · no se garantiza el tamaño exacto.",
+      "target": "Tamaño máximo (KB)",
+      "download": "Descargar imagen",
+      "note": "JPG, PNG o WebP · hasta 25 MiB · El archivo no sale de tu dispositivo.",
       "error": "No se pudo procesar el archivo. Usa JPG, PNG o WebP dentro de los límites.",
       "status": "Procesando...",
       "brand": "Compresor de Imágenes",
-      "warning": "La calidad, el formato o las dimensiones pueden cambiar. Se conserva la transparencia. El archivo no sale de tu dispositivo.",
+      "warning": "La imagen se ajustará a ese límite siempre que sea técnicamente posible. La calidad, dimensiones o formato pueden cambiar.",
       "previewLabel": "Vista previa del resultado"
     }
   }
