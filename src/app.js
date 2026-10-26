@@ -102,6 +102,5 @@ async function run(id) {
 
 fileInput.addEventListener('change', () => schedule(0));
 targetInput.addEventListener('input', () => schedule(450));
-targetInput.addEventListener('change', () => schedule(0));
 window.addEventListener('pagehide', () => {invalidate();queuedGeneration=null;});
 form.addEventListener('submit', e => e.preventDefault());
