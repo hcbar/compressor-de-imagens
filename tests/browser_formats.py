@@ -33,40 +33,37 @@ def run_format_cases(page):
     }''')
     def select_input(kind):
         page.evaluate('''kind=>{const d=new DataTransfer();d.items.add(new File([window.__modeInputs[kind]],'fixture',{type:window.__modeInputs[kind].type}));const input=document.querySelector('#file');input.files=d.files;input.dispatchEvent(new Event('change'));}''',kind)
+    # The user-facing product has no codec or mode selector; the automatic
+    # codec choice is still verified independently by the matrix above.
+    assert page.locator('#format').count()==0
     select_input('alpha')
-    page.locator('#format').select_option('original')
     page.locator('#target').fill('100')
-    page.locator('button[type=submit]').click()
-    page.locator('#download').wait_for(state='visible',timeout=30000)
-    assert 'Target reached' in page.locator('#result').inner_text()
-    assert 'No size reduction' in page.locator('#result').inner_text()
+    page.locator('#preview-panel').wait_for(state='visible',timeout=30000)
+    assert page.locator('#preview').get_attribute('src').startswith('blob:')
     with page.expect_download() as info:page.locator('#download').click()
-    assert info.value.suggested_filename.endswith('.png')
-    assert Path(info.value.path()).read_bytes()[:8]==b'\x89PNG\r\n\x1a\n'
+    output = Path(info.value.path()).read_bytes()
+    assert info.value.suggested_filename.endswith(('.png','.webp'))
+    assert output[:8]==bytes([137,80,78,71,13,10,26,10]) or output[8:12]==b'WEBP'
     select_input('detail')
+    assert page.locator('#preview-panel').is_hidden()
     page.locator('#target').fill('1')
-    page.locator('button[type=submit]').click()
     page.locator('#download').wait_for(state='visible',timeout=30000)
     assert 'Target not reached' in page.locator('#result').inner_text()
-    page.locator('#format').select_option('smallest')
-    assert page.locator('#download').is_hidden()
-    page.evaluate('''() => {const original=window.createImageBitmap;window.createImageBitmap=(...a)=>new Promise((ok,bad)=>setTimeout(()=>original(...a).then(ok,bad),300));}''')
-    page.locator('button[type=submit]').click()
-    page.locator('#format').select_option('original')
-    page.wait_for_function("() => !document.querySelector('button[type=submit]').disabled")
-    assert page.locator('#download').is_hidden()
-    assert page.locator('#status').inner_text()==''
-    print('Two-mode matrix: '+json.dumps(rows),flush=True)
+    print('Codec safety matrix and simplified automatic UI: '+json.dumps(rows),flush=True)
 
 
 def run_locales(browser, host):
-    labels={'en':['Smallest file (recommended)','Keep original format'],'pt':['Menor arquivo (recomendado)','Manter formato original'],'es':['Archivo más pequeño (recomendado)','Mantener formato original']}
+    labels={'en':'Result preview','pt':'Prévia do resultado','es':'Vista previa del resultado'}
     for lang,path in [('en','/'),('pt','/pt/'),('es','/es/')]:
         page=browser.new_page(viewport={'width':390,'height':844})
         page.goto(host+path)
-        assert page.locator('#format option').all_text_contents()==labels[lang]
-        assert page.locator('#format').input_value()=='smallest'
+        assert page.locator('html').get_attribute('lang').startswith(lang)
+        assert page.locator('#format').count()==0
+        assert page.locator('button[type=submit]').count()==0
+        assert page.locator('#preview-panel').get_attribute('aria-label')==labels[lang]
+        assert page.locator('#file').count()==1 and page.locator('#target').count()==1
+        assert page.locator('#download').is_hidden()
         assert page.evaluate('document.documentElement.scrollWidth<=innerWidth')
         if lang=='pt' and os.getenv('SCREENSHOT_DIR'):page.screenshot(path=str(Path(os.environ['SCREENSHOT_DIR'])/'mobile-pt.png'),full_page=True)
         page.close()
-    print('Two localized options and mobile layout OK: EN/PT/ES',flush=True)
+    print('Two inputs, automatic result and mobile layout OK: EN/PT/ES',flush=True)

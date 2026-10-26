@@ -1,22 +1,14 @@
 # Image Compressor / Compressor de Imagens
 
-Compressor local derivado da main do starter, Issue #14. Dois modos: Menor arquivo (recomendado) e Manter formato original. Sem upload.
+A two-input, automatic, browser-only image compressor. Choose an image, set the target KB, preview the result, and download. No upload, account or format selector.
 
-Node >=22.13.0:
+Global default: English on `/`; Portuguese on `/pt/`, Spanish on `/es/`.
 
-```
+Run locally on Node >=22.13:
+
+```sh
 npm ci --ignore-scripts --no-audit --no-fund
 npm run dev
 ```
 
-Rotas: `/`, `/pt/`, `/es/` em http://127.0.0.1:4173/.
-
-Verificação afetada por esta rodada:
-
-```
-npm run build
-node --test tests/image.test.mjs tests/formats.test.mjs tests/build.test.mjs tests/config.test.mjs
-python tests/browser-modes.py
-```
-
-Browser: Python 3.12 e Playwright/Chromium conforme lock em tests/requirements-browser.txt. CHROMIUM_PATH permite navegador instalado. O CI próprio já incluído executa a suíte completa e o smoke, sem deploy. Consulte TRANSFER.md para transferir o mesmo commit, PRODUCT.md para limites e RELEASE.md para os gates de publicação.
+CI runs `npm run verify`, Chromium browser smoke in three languages and uploads the tested build. `wrangler.jsonc` configures the Cloudflare Workers preview deployment. Preview is publicly accessible but marked `noindex`; no tracking or advertising. See `PRODUCT.md` for limits and `DEPLOY-PREVIEW.md` for deployment instructions.

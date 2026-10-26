@@ -1,23 +1,29 @@
 import { compressImageToTarget } from './image.js';
+
 const form = document.querySelector('#tool-form');
 const fileInput = document.querySelector('#file');
-const formatInput = document.querySelector('#format');
 const targetInput = document.querySelector('#target');
 const output = document.querySelector('#result');
 const status = document.querySelector('#status');
 const download = document.querySelector('#download');
-const btn = form.querySelector('button[type=submit]');
-let currentURL = null;
-let generation = 0;
-let controller = null;
-let busy = false;
+const preview = document.querySelector('#preview');
+const previewPanel = document.querySelector('#preview-panel');
 const lang = document.documentElement.lang.split('-')[0];
 const messages = {
-  en: {unsupported:'This browser cannot encode this format. Try the other mode.',need:'Choose an image first.',fail:'Could not process that file.',out:'Result',reached:'Target reached.',notReached:'Target not reached; this is the smallest output found.',noGain:'No size reduction: the result is as large as or larger than the original.'},
-  pt: {unsupported:'Este navegador não consegue gerar este formato. Tente o outro modo.',need:'Escolha uma imagem primeiro.',fail:'Não foi possível processar o arquivo.',out:'Resultado',reached:'Meta atingida.',notReached:'Meta não atingida; este é o menor resultado encontrado.',noGain:'Sem redução de tamanho: o resultado é igual ou maior que o original.'},
-  es: {unsupported:'Este navegador no puede generar este formato. Prueba el otro modo.',need:'Primero elige una imagen.',fail:'No se pudo procesar el archivo.',out:'Resultado',reached:'Objetivo alcanzado.',notReached:'Objetivo no alcanzado; este es el resultado más pequeño.',noGain:'Sin reducción de tamaño: el resultado es igual o mayor que el original.'}
-}[lang];
+  en: {unsupported:'This browser cannot create a supported image format.',fail:'Could not process this image.',out:'Result',reached:'Target reached.',notReached:'Target not reached; this is the smallest result found.',noGain:'The result is not smaller than the original.',invalid:'Enter a target between 1 and 20,480 KB.'},
+  pt: {unsupported:'Este navegador não consegue gerar um formato compatível.',fail:'Não foi possível processar esta imagem.',out:'Resultado',reached:'Meta atingida.',notReached:'Meta não atingida; este é o menor resultado encontrado.',noGain:'O resultado não ficou menor que o original.',invalid:'Informe um tamanho entre 1 e 20.480 KB.'},
+  es: {unsupported:'Este navegador no puede generar un formato compatible.',fail:'No se pudo procesar esta imagen.',out:'Resultado',reached:'Objetivo alcanzado.',notReached:'Objetivo no alcanzado; este es el resultado más pequeño encontrado.',noGain:'El resultado no es menor que el original.',invalid:'Introduce un tamaño entre 1 y 20.480 KB.'}
+}[lang] || {};
+let generation = 0;
+let currentURL = null;
+let controller = null;
+let busy = false;
+let queuedGeneration = null;
+let debounce = null;
+
 function release() {
+  preview.removeAttribute('src');
+  previewPanel.hidden = true;
   if (currentURL) URL.revokeObjectURL(currentURL);
   currentURL = null;
   download.hidden = true;
@@ -25,44 +31,76 @@ function release() {
 }
 function invalidate() {
   generation++;
+  clearTimeout(debounce);
   controller?.abort();
   release();
-  status.textContent = '';
   output.textContent = '';
+  status.textContent = '';
 }
-fileInput.addEventListener('change', invalidate);
-targetInput.addEventListener('input', invalidate);
-formatInput.addEventListener('change', invalidate);
-window.addEventListener('pagehide', invalidate);
-form.addEventListener('submit', async e => {
-  e.preventDefault();
-  if (busy) return; // Native canvas/decode work already running cannot be preempted.
+function validTarget() {
+  const v = targetInput.value.trim();
+  const n = Number(v);
+  return v !== '' && Number.isFinite(n) && n >= 1 && n <= 20480 ? n : null;
+}
+function schedule(delay) {
   invalidate();
-  const myGeneration = generation;
-  const f = fileInput.files?.[0];
-  if (!f) { status.textContent = messages.need; return; }
-  const targetKB = Number(targetInput.value);
-  if (!Number.isFinite(targetKB) || targetKB < 1 || targetKB > 20480) {status.textContent = messages.fail;return;}
-  controller = new AbortController();
-  busy = true;
-  btn.disabled = true;
+  const file = fileInput.files?.[0];
+  if (!file) return;
+  const target = validTarget();
+  if (target === null) {
+    if (targetInput.value.trim() !== '') status.textContent = messages.invalid;
+    return;
+  }
   status.textContent = form.dataset.working;
+  const thisGeneration = generation;
+  debounce = setTimeout(() => run(thisGeneration), delay);
+}
+async function run(id) {
+  if (id !== generation) return;
+  if (busy) {
+    queuedGeneration = id;
+    return;
+  }
+  const file = fileInput.files?.[0];
+  const targetKB = validTarget();
+  if (!file || targetKB === null) return;
+  const mine = new AbortController();
+  controller = mine;
+  busy = true;
   try {
-    const result = await compressImageToTarget(f, targetKB * 1024, {signal:controller.signal, mode:formatInput.value});
-    if (myGeneration !== generation || controller.signal.aborted) return;
-    currentURL = URL.createObjectURL(result.blob);
-    download.href = currentURL;
-    const extension = { 'image/jpeg':'jpg', 'image/webp':'webp', 'image/png':'png' }[result.blob.type];
+    // Only one native canvas compression at a time. New input invalidates
+    // stale output immediately, and queues the latest request.
+    const result = await compressImageToTarget(file, targetKB * 1024, {signal:mine.signal});
+    if (id !== generation || mine.signal.aborted) return;
+    const extension = {'image/jpeg':'jpg','image/webp':'webp','image/png':'png'}[result.blob.type];
+    if (!extension) throw new Error('Unsupported output format: ' + result.blob.type);
+    const url = URL.createObjectURL(result.blob);
+    if (id !== generation || mine.signal.aborted) {URL.revokeObjectURL(url);return;}
+    currentURL = url;
+    preview.src = url;
+    previewPanel.hidden = false;
+    download.href = url;
     download.download = 'compressed-image.' + extension;
     download.hidden = false;
     const format = n => (n / 1024).toLocaleString(lang, {minimumFractionDigits:1, maximumFractionDigits:1}) + ' KB';
-    output.textContent = `${messages.out}: ${format(f.size)} → ${format(result.blob.size)} · ${extension.toUpperCase()} · ${result.width} × ${result.height} · ${result.reachedTarget ? messages.reached : messages.notReached}${result.blob.size >= f.size ? ' · ' + messages.noGain : ''}`;
+    output.textContent = `${messages.out}: ${format(file.size)} → ${format(result.blob.size)} · ${extension.toUpperCase()} · ${result.width} × ${result.height} · ${result.reachedTarget ? messages.reached : messages.notReached}${result.blob.size >= file.size ? ' · ' + messages.noGain : ''}`;
     status.textContent = '';
   } catch (error) {
-    if (myGeneration === generation && error?.name !== 'AbortError') status.textContent = error.message?.startsWith('Unsupported output format:') ? messages.unsupported : messages.fail;
+    if (id === generation && error?.name !== 'AbortError')
+      status.textContent = error.message?.startsWith('Unsupported output format:') ? messages.unsupported : messages.fail;
   } finally {
+    if (controller === mine) controller = null;
     busy = false;
-    btn.disabled = false;
-    if (myGeneration === generation) controller = null;
+    if (queuedGeneration === generation) {
+      queuedGeneration = null;
+      void run(generation);
+    } else {
+      queuedGeneration = null;
+    }
   }
-});
+}
+
+fileInput.addEventListener('change', () => schedule(0));
+targetInput.addEventListener('input', () => schedule(450));
+window.addEventListener('pagehide', () => {invalidate();queuedGeneration=null;});
+form.addEventListener('submit', e => e.preventDefault());
