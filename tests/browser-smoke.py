@@ -86,7 +86,7 @@ def main():
                     page.locator('#download').wait_for(state='visible',timeout=30000)
                     assert page.locator('#preview-panel').is_visible()
                     run_format_cases(page)
-                    assert not any(not (u.startswith(HOST) or u.startswith('data:')) for u in requests),requests
+                    assert not any(not (u.startswith(HOST) or u.startswith('data:') or u.startswith('blob:'+HOST)) for u in requests),requests
                     print('Browser smoke OK: 3 locales, auto compression, preview, transparent output, no stale download, zero uploads')
                 finally:
                     browser.close()
