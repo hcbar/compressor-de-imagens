@@ -1,0 +1,17 @@
+{
+  "name": "image-compressor",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=22.13.0"
+  },
+  "scripts": {
+    "check": "node scripts/check.mjs",
+    "build": "node scripts/build.mjs",
+    "dev": "node scripts/dev.mjs",
+    "test": "node --test tests/*.test.mjs",
+    "verify": "npm run check && npm run build && npm test && node scripts/verify-build.mjs",
+    "manifest": "node scripts/manifest.mjs"
+  }
+}

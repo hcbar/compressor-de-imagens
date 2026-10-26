@@ -1,0 +1,7 @@
+{
+  "issue": "https://github.com/hcbar/microtool-starter/issues/14",
+  "base_commit": "e5e88173b84804cca4d749f79b99065c37b2020c",
+  "previous_export_source_sha256": "d79c8747bd6ae38e3344e69b1656b82685af8063ba553b34cf229cb47cb5323b",
+  "authorization": "Owner requested two output modes, affected tests, isolated verifiable Git commit and transfer instructions; no remote repository, deploy, domain or starter changes authorized.",
+  "history": "Independent local product snapshot, root commit; previous artifacts preserved separately."
+}

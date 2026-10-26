@@ -1,0 +1,75 @@
+{
+  "slug": "image-compressor",
+  "brand": "Image Compressor",
+  "siteUrl": "",
+  "profile": "local",
+  "indexable": false,
+  "defaultLocale": "en",
+  "locales": [
+    "en",
+    "pt",
+    "es"
+  ],
+  "monetization": {
+    "policy": "responsible",
+    "adsEnabled": false,
+    "analyticsEnabled": false,
+    "premiumEnabled": false
+  },
+  "content": {
+    "en": {
+      "title": "Free Online Image Compressor | Reduce JPG, PNG and WebP",
+      "description": "Choose a size in KB. Reduce JPG, PNG or WebP locally and download the result. No uploads.",
+      "hero": "Image Compressor",
+      "lead": "Reduce photos and images in KB, right in your browser.",
+      "upload": "Choose image",
+      "target": "Target size (KB)",
+      "action": "Compress image",
+      "download": "Download compressed image",
+      "note": "JPG, PNG or WebP input · up to 25 MiB and 24 MP. Output up to 12 MP. Best effort: the exact size is not guaranteed. 1 KB here = 1024 bytes. Animated files become a still image. Processing stays on your device.",
+      "error": "Could not process this file. Use JPG, PNG or WebP within the limits.",
+      "status": "Working...",
+      "format": "Output mode",
+      "formatHelp": "Smallest file compares real outputs while preserving transparency. Keep original format retains JPG, PNG or WebP; it does not guarantee lossless compression or a smaller file. PNG has no quality control. Dimensions may shrink in either mode.",
+      "brand": "Image Compressor",
+      "smallest": "Smallest file (recommended)",
+      "original": "Keep original format"
+    },
+    "pt": {
+      "title": "Compressor de Imagens Online Grátis | Reduzir JPG, PNG e WebP",
+      "description": "Escolha um alvo em KB. Reduza JPG, PNG ou WebP no navegador e baixe o resultado. Sem uploads.",
+      "hero": "Compressor de Imagens",
+      "lead": "Reduza fotos e imagens em KB, direto no navegador",
+      "upload": "Escolher imagem",
+      "target": "Tamanho-alvo (KB)",
+      "action": "Comprimir imagem",
+      "download": "Baixar imagem comprimida",
+      "note": "Entrada JPG, PNG ou WebP · até 25 MiB e 24 MP. Saída até 12 MP. Melhor esforço: o tamanho exato não é garantido. Aqui, 1 KB = 1024 bytes. Arquivos animados viram imagem estática. O processamento fica no seu dispositivo.",
+      "error": "Não foi possível processar o arquivo. Use JPG, PNG ou WebP dentro dos limites.",
+      "status": "Processando...",
+      "format": "Modo de saída",
+      "formatHelp": "Menor arquivo compara resultados reais e preserva transparência. Manter formato original mantém JPG, PNG ou WebP; não garante compressão sem perdas nem arquivo menor. PNG não tem ajuste de qualidade. As dimensões podem diminuir nos dois modos.",
+      "brand": "Compressor de Imagens",
+      "smallest": "Menor arquivo (recomendado)",
+      "original": "Manter formato original"
+    },
+    "es": {
+      "title": "Compresor de Imágenes Online Gratis | Reducir JPG, PNG y WebP",
+      "description": "Elige un objetivo en KB. Reduce JPG, PNG o WebP en tu navegador y descarga el resultado. Sin subidas.",
+      "hero": "Compresor de Imágenes",
+      "lead": "Reduce fotos e imágenes en KB, directamente en tu navegador.",
+      "upload": "Elegir imagen",
+      "target": "Tamaño objetivo (KB)",
+      "action": "Comprimir imagen",
+      "download": "Descargar imagen comprimida",
+      "note": "Entrada JPG, PNG o WebP · hasta 25 MiB y 24 MP. Salida hasta 12 MP. Mejor esfuerzo: no se garantiza el tamaño exacto. Aquí, 1 KB = 1024 bytes. Los archivos animados se convierten en una imagen estática. El procesamiento se queda en tu dispositivo.",
+      "error": "No se pudo procesar el archivo. Usa JPG, PNG o WebP dentro de los límites.",
+      "status": "Procesando...",
+      "format": "Modo de salida",
+      "formatHelp": "Archivo más pequeño compara resultados reales y conserva la transparencia. Mantener formato original conserva JPG, PNG o WebP; no garantiza compresión sin pérdidas ni un archivo menor. PNG no permite ajustar la calidad. Las dimensiones pueden reducirse en ambos modos.",
+      "brand": "Compresor de Imágenes",
+      "smallest": "Archivo más pequeño (recomendado)",
+      "original": "Mantener formato original"
+    }
+  }
+}
