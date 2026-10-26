@@ -1,9 +1,9 @@
 {
   "slug": "image-compressor",
   "brand": "Image Compressor",
-  "siteUrl": "",
+  "siteUrl": "https://simplycompressor.com/",
   "profile": "local",
-  "indexable": false,
+  "indexable": true,
   "defaultLocale": "en",
   "locales": [
     "en",
