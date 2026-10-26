@@ -48,8 +48,11 @@ def run_format_cases(page):
     assert page.locator('#preview-panel').is_hidden()
     page.locator('#target').fill('1')
     page.locator('#download').wait_for(state='visible',timeout=30000)
-    assert 'Target not reached' in page.locator('#result').inner_text()
-    print('Codec safety matrix and simplified automatic UI: '+json.dumps(rows),flush=True)
+    assert '→' in page.locator('#result').inner_text()
+    with page.expect_download() as tiny_download:
+        page.locator('#download').click()
+    assert len(Path(tiny_download.value.path()).read_bytes()) <= 1024, 'The requested 1 KB ceiling was not respected'
+    print('Codec safety matrix and hard 1 KB maximum: '+json.dumps(rows),flush=True)
 
 
 def run_locales(browser, host):
