@@ -10,9 +10,9 @@ const preview = document.querySelector('#preview');
 const previewPanel = document.querySelector('#preview-panel');
 const lang = document.documentElement.lang.split('-')[0];
 const messages = {
-  en: {unsupported:'This browser cannot create a supported image format.',fail:'Could not process this image.',out:'Result',reached:'Target reached.',notReached:'Target not reached; this is the smallest result found.',noGain:'The result is not smaller than the original.',invalid:'Enter a target between 1 and 20,480 KB.'},
-  pt: {unsupported:'Este navegador não consegue gerar um formato compatível.',fail:'Não foi possível processar esta imagem.',out:'Resultado',reached:'Meta atingida.',notReached:'Meta não atingida; este é o menor resultado encontrado.',noGain:'O resultado não ficou menor que o original.',invalid:'Informe um tamanho entre 1 e 20.480 KB.'},
-  es: {unsupported:'Este navegador no puede generar un formato compatible.',fail:'No se pudo procesar esta imagen.',out:'Resultado',reached:'Objetivo alcanzado.',notReached:'Objetivo no alcanzado; este es el resultado más pequeño encontrado.',noGain:'El resultado no es menor que el original.',invalid:'Introduce un tamaño entre 1 y 20.480 KB.'}
+  en: {unsupported:'This browser cannot create a supported image format.',fail:'Could not process this image.',out:'Result',reached:'Target reached.',notReached:'Target not reached; this is the smallest result found.',noGain:'The result is not smaller than the original.',alreadySmall:'Already below the requested size.',cannot:'This size could not be achieved with this image.',invalid:'Enter a target between 1 and 20,480 KB.'},
+  pt: {unsupported:'Este navegador não consegue gerar um formato compatível.',fail:'Não foi possível processar esta imagem.',out:'Resultado',reached:'Meta atingida.',notReached:'Meta não atingida; este é o menor resultado encontrado.',noGain:'O resultado não ficou menor que o original.',alreadySmall:'A imagem já está abaixo do tamanho solicitado.',cannot:'Não foi possível chegar a esse tamanho com esta imagem.',invalid:'Informe um tamanho entre 1 e 20.480 KB.'},
+  es: {unsupported:'Este navegador no puede generar un formato compatible.',fail:'No se pudo procesar esta imagen.',out:'Resultado',reached:'Objetivo alcanzado.',notReached:'Objetivo no alcanzado; este es el resultado más pequeño encontrado.',noGain:'El resultado no es menor que el original.',alreadySmall:'La imagen ya es menor que el tamaño solicitado.',cannot:'No se pudo alcanzar este tamaño con esta imagen.',invalid:'Introduce un tamaño entre 1 y 20.480 KB.'}
 }[lang] || {};
 let generation = 0;
 let currentURL = null;
@@ -83,11 +83,11 @@ async function run(id) {
     download.download = 'compressed-image.' + extension;
     download.hidden = false;
     const format = n => (n / 1024).toLocaleString(lang, {minimumFractionDigits:1, maximumFractionDigits:1}) + ' KB';
-    output.textContent = `${messages.out}: ${format(file.size)} → ${format(result.blob.size)} · ${extension.toUpperCase()} · ${result.width} × ${result.height} · ${result.reachedTarget ? messages.reached : messages.notReached}${result.blob.size >= file.size ? ' · ' + messages.noGain : ''}`;
+    output.textContent = `${format(file.size)} → ${format(result.blob.size)}${result.unchanged ? ' · ' + messages.alreadySmall : ''}`;
     status.textContent = '';
   } catch (error) {
     if (id === generation && error?.name !== 'AbortError')
-      status.textContent = error.message?.startsWith('Unsupported output format:') ? messages.unsupported : messages.fail;
+      status.textContent = error.message === 'Target cannot be reached' ? messages.cannot : error.message?.startsWith('Unsupported output format:') ? messages.unsupported : messages.fail;
   } finally {
     if (controller === mine) controller = null;
     busy = false;

@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import {compressImageToTarget} from '../src/image.js';
 
 function input(type) {
-  const b=new Uint8Array(33);
+  const b=new Uint8Array(1500);
   if(type==='image/png') {b.set([137,80,78,71,13,10,26,10,0,0,0,13,73,72,68,82]);const d=new DataView(b.buffer);d.setUint32(16,1);d.setUint32(20,1);}
   if(type==='image/webp') b.set([82,73,70,70,22,0,0,0,87,69,66,80,86,80,56,88]);
   if(type==='image/jpeg') b.set([255,216,255,217]);

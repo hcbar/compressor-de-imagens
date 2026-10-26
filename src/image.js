@@ -80,6 +80,11 @@ export async function compressImageToTarget(file, targetBytes, {signal, mode = '
       const pixels = ctx.getImageData(0, y, canvas.width, Math.min(64, canvas.height-y)).data;
       for (let i = 3; i < pixels.length; i += 4) if (pixels[i] < 255) { hasTransparency = true; break; }
     }
+    // An image already under the requested cap needs no quality degradation.
+    // Respect the 12 MP output cap even when returning an unchanged file.
+    if (mode === 'smallest' && file.size <= targetBytes && bitmap.width * bitmap.height <= 12_000_000) {
+      return {blob:file, width:bitmap.width, height:bitmap.height, reachedTarget:true, hasTransparency, unchanged:true};
+    }
     // Compare real output bytes. Never flatten alpha in smallest mode.
     const formats = mode === 'smallest' ? (hasTransparency ? ['png','webp'] : ['jpeg','webp']) : [file.type.slice(6)];
     const candidates = [];
@@ -88,17 +93,19 @@ export async function compressImageToTarget(file, targetBytes, {signal, mode = '
       let scale = Math.min(1, Math.sqrt(12_000_000 / (bitmap.width * bitmap.height)));
       let bestEligible = null, smallest = null;
       try {
-        for (let pass = 0; pass < 7; pass++) {
+        for (let pass = 0; pass < (mode === 'smallest' ? 16 : 7); pass++) {
           aborted(signal);
-          canvas.width = Math.max(1, Math.floor(bitmap.width * scale));
-          canvas.height = Math.max(1, Math.floor(bitmap.height * scale));
+          // A last-resort 1x1 encode makes very small targets achievable.
+          const finalPass = mode === 'smallest' && pass === 15;
+          canvas.width = finalPass ? 1 : Math.max(1, Math.floor(bitmap.width * scale));
+          canvas.height = finalPass ? 1 : Math.max(1, Math.floor(bitmap.height * scale));
           ctx.clearRect(0, 0, canvas.width, canvas.height);
           if (outputFormat === 'jpeg') {
             ctx.fillStyle = '#fff';
             ctx.fillRect(0, 0, canvas.width, canvas.height);
           }
           ctx.drawImage(bitmap, 0, 0, canvas.width, canvas.height);
-          let lo = .35, hi = .92;
+          let lo = mode === 'smallest' ? .14 : .35, hi = .92;
           for (let step = 0; step < (outputFormat === 'png' ? 1 : 7); step++) {
             aborted(signal);
             const q = (lo + hi) / 2;
@@ -108,8 +115,11 @@ export async function compressImageToTarget(file, targetBytes, {signal, mode = '
             if (!smallest || blob.size < smallest.blob.size) smallest = candidate;
             if (blob.size <= targetBytes) { bestEligible = candidate; lo = q; } else hi = q;
           }
-          if (bestEligible) break;
-          scale *= .76;
+          if (bestEligible || (canvas.width === 1 && canvas.height === 1)) break;
+          if (mode === 'smallest') {
+            const ratio = Math.sqrt(targetBytes / Math.max(1, smallest.blob.size)) * .93;
+            scale *= Math.max(.26, Math.min(.73, ratio));
+          } else scale *= .76;
         }
         const best = bestEligible || smallest;
         if (best) candidates.push({...best, reachedTarget:Boolean(bestEligible)});
@@ -123,6 +133,7 @@ export async function compressImageToTarget(file, targetBytes, {signal, mode = '
       (a.reachedTarget ? b.width*b.height-a.width*a.height : 0) || a.blob.size-b.blob.size);
     if (!candidates.length) throw new Error('No supported output');
     aborted(signal);
-    return {...candidates[0], hasTransparency};
+    if (mode === 'smallest' && !candidates[0].reachedTarget) throw new Error('Target cannot be reached');
+    return {...candidates[0], hasTransparency, unchanged:false};
   } finally { bitmap.close(); }
 }
