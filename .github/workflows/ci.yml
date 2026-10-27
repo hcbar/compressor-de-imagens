@@ -23,11 +23,14 @@ jobs:
       - name: Install pinned browser test harness
         run: |
           python3.12 -m venv "$RUNNER_TEMP/microtool-browser-venv"
-          "$RUNNER_TEMP/microtool-browser-venv/bin/pip" install --no-cache-dir --only-binary=:all: --require-hashes -r tests/requirements-browser.txt
+          "$RUNNER_TEMP/microtool-browser-venv/bin/pip" install --no-cache-dir --only-binary=:all: --require-hashes -r tests/requirements-browser.txt -r tests/requirements-pdf.txt
           "$RUNNER_TEMP/microtool-browser-venv/bin/python" -m playwright install --with-deps chromium
       - name: "Browser smoke: three locales, actual compression, cancellation"
         run: |
           "$RUNNER_TEMP/microtool-browser-venv/bin/python" tests/browser-smoke.py
+      - name: 'PDF Chromium smoke: local compression and no uploads'
+        run: |
+          "$RUNNER_TEMP/microtool-browser-venv/bin/python" tests/browser-pdf-smoke.py
       - run: npm run manifest
       - name: Assert clean source after verification
         run: git diff --exit-code -- . ':(exclude)wrangler.preview.jsonc' ':(exclude)wrangler.production.jsonc'

@@ -7,6 +7,7 @@ for(const lang of p.locales){const path=lang==='en'?'dist/index.html':`dist/${la
   const indexable=target==='production'&&p.indexable;
   if(s.includes('<meta name="robots" content="index,follow">')!==indexable)throw new Error('index state mismatch');
 }
+for(const path of ['pdf','pt/pdf','es/pdf']){const html=readFileSync(`dist/${path}/index.html`,'utf8');if(!html.includes('assets/pdf.js')||!html.includes('id="pdf-form"'))throw new Error('PDF page missing '+path);if(html.includes('<meta name="robots" content="index,follow">')!==(target==='production'&&p.indexable))throw new Error('PDF robots mismatch');}
 const h=readFileSync('dist/_headers','utf8');if(!h.includes("script-src 'self'")||!h.includes("connect-src 'self'"))throw new Error('CSP weakened');
 if(!existsSync('dist/robots.txt'))throw new Error('robots missing');
 if(target==='production' && p.indexable) {
@@ -23,7 +24,7 @@ if(target==='production' && p.indexable) {
   const robots=readFileSync('dist/robots.txt','utf8');
   if(!robots.includes('Allow: /')||!robots.includes('Sitemap: '+origin+'/sitemap.xml'))throw new Error('Production robots invalid');
   const sitemap=readFileSync('dist/sitemap.xml','utf8');
-  for(const route of Object.values(urls))if(!sitemap.includes('<loc>'+origin+route+'</loc>'))throw new Error('Missing sitemap URL '+route);
+  for(const route of [...Object.values(urls),'/pdf/','/pt/pdf/','/es/pdf/'])if(!sitemap.includes('<loc>'+origin+route+'</loc>'))throw new Error('Missing sitemap URL '+route);
 }
 const config=JSON.parse(readFileSync('wrangler.preview.jsonc','utf8'));
 if(config.name.endsWith('-preview')===false||config.observability.enabled!==false)throw new Error('unsafe preview config');

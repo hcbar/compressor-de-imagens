@@ -13,5 +13,8 @@
     "test": "node --test tests/*.test.mjs",
     "verify": "npm run check && npm run build && npm test && node scripts/verify-build.mjs",
     "manifest": "node scripts/manifest.mjs"
+  },
+  "dependencies": {
+    "qpdf-run": "0.2.1"
   }
 }

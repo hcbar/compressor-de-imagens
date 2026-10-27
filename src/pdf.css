@@ -1,0 +1,17 @@
+/* PDF tool is intentionally self-contained; the existing image UI is untouched. */
+.pdf-page .panel {max-width: 660px;}
+.pdf-page .pdf-heading {margin-bottom: 1rem;}
+.pdf-page select, .pdf-page input[type=file] {display: block; width: 100%; max-width: 100%; margin-top: .5rem;}
+.pdf-page select {border: 1px solid #9099a5; border-radius: 8px; padding: .7rem; background: white; color: #17212e; font: inherit;}
+.pdf-page .pdf-actions {display: flex; flex-wrap: wrap; gap: .6rem; margin-top: 1.2rem;}
+.pdf-page button {border: 0; border-radius: 8px; padding: .8rem 1.1rem; background: #193d70; color: white; font: inherit; font-weight: 600; cursor: pointer;}
+.pdf-page button:disabled {opacity: .5; cursor: wait;}
+.pdf-page #pdf-cancel {background: #505b68;}
+.pdf-page #pdf-status[data-state=error] {color: #a12b23;}
+.pdf-page #pdf-status[data-state=success] {color: #126c41;}
+.pdf-page #pdf-result {font-weight: 600; margin-top: 1rem;}
+.pdf-page #pdf-download {display: inline-block; margin-top: .6rem;}
+.pdf-page #pdf-download[hidden] {display: none;}
+.pdf-page .pdf-warning {line-height: 1.55; font-size: .9rem;}
+.pdf-page .pdf-nav {display: flex; gap: .75rem; margin: 1rem 0;}
+.pdf-page .pdf-nav a[aria-current] {font-weight: 700;}

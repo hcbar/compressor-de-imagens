@@ -1,9 +1,10 @@
 import {createServer} from 'node:http';import {readFileSync,existsSync,statSync} from 'node:fs';import {resolve,sep,extname} from 'node:path';import {execFileSync} from 'node:child_process';import {readConfig} from './check.mjs';import backend from '../worker/api.mjs';
 // Rebuild on each start: never serve a stale dist after configuration or source edits.
 execFileSync(process.execPath,['scripts/build.mjs'],{stdio:'inherit',env:{...process.env,DEPLOY_TARGET:'preview'}});
-const root=resolve('dist')+sep;const mime={'.html':'text/html; charset=utf-8','.js':'text/javascript; charset=utf-8','.css':'text/css; charset=utf-8','.txt':'text/plain; charset=utf-8','.xml':'application/xml'};
+const root=resolve('dist')+sep;const mime={'.html':'text/html; charset=utf-8','.js':'text/javascript; charset=utf-8','.css':'text/css; charset=utf-8','.txt':'text/plain; charset=utf-8','.xml':'application/xml','.wasm':'application/wasm'};
 const security={'x-content-type-options':'nosniff','referrer-policy':'no-referrer','x-frame-options':'DENY','permissions-policy':'camera=(), microphone=(), geolocation=(), payment=()','content-security-policy':"default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self' blob: data:; connect-src 'self'; font-src 'self'; object-src 'none'; base-uri 'none'; form-action 'self'; frame-ancestors 'none'"};
 const product=readConfig();
+const pdfWasmCsp=security['content-security-policy'].replace("script-src 'self'", "script-src 'self' 'wasm-unsafe-eval'");
 const server=createServer(async(req,res)=>{
   if(!['GET','HEAD'].includes(req.method)){res.writeHead(405,security).end();return;}
   let url;try{url=new URL(req.url,'http://localhost')}catch{res.writeHead(400,security).end();return;}
@@ -20,6 +21,8 @@ const server=createServer(async(req,res)=>{
   if(path.includes('\\')||path.includes('\0')||path.split('/').includes('..')){res.writeHead(400,security).end();return;}
   const file=resolve('dist',path.replace(/^\//,''),path.endsWith('/')?'index.html':'');
   if(!file.startsWith(root)||!existsSync(file)||!statSync(file).isFile()){res.writeHead(404,security).end('Not found');return;}
-  const body=readFileSync(file);res.writeHead(200,{...security,'content-type':mime[extname(file)]||'application/octet-stream','content-length':body.length});res.end(req.method==='HEAD'?undefined:body);
+  const body=readFileSync(file);const routeIsPdf = path.startsWith('/pdf/') || path.startsWith('/pt/pdf/') || path.startsWith('/es/pdf/') || path.startsWith('/assets/qpdf/');
+  const routeSecurity=routeIsPdf ? {...security,'content-security-policy':pdfWasmCsp} : security;
+  res.writeHead(200,{...routeSecurity,'content-type':mime[extname(file)]||'application/octet-stream','content-length':body.length});res.end(req.method==='HEAD'?undefined:body);
 });
 const port=Number(process.env.PORT||4173);server.listen(port,'127.0.0.1',()=>console.log(`Local preview http://127.0.0.1:${port}`));
