@@ -15,6 +15,6 @@
     "manifest": "node scripts/manifest.mjs"
   },
   "dependencies": {
-    "qpdf-run": "0.2.3"
+    "qpdf-run": "0.2.1"
   }
 }
