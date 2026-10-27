@@ -27,7 +27,7 @@ test('pinned PDF worker runtime is self-hosted and loaded only by PDF route', ()
   assert.doesNotMatch(image, /assets\/pdf.js|assets\/qpdf/);
   const js = readFileSync('dist/assets/pdf.js', 'utf8');
   assert.match(js, /--optimize-images/);
-  assert.match(js, /--check/);
+  assert.match(js, /validated\.pdf/);
   assert.match(js, /optimized.byteLength < input.byteLength/);
   assert.doesNotMatch(js, /fetch\s*\(/);
 });
