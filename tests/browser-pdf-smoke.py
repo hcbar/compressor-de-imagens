@@ -49,7 +49,11 @@ def main():
                 try:
                     page = browser.new_page(accept_downloads=True)
                     requests = []
+                    diagnostics = []
                     page.on('request', lambda req: requests.append((req.method, req.url)))
+                    page.on('console', lambda m: diagnostics.append('console: ' + m.type + ' ' + m.text))
+                    page.on('pageerror', lambda exc: diagnostics.append('pageerror: ' + str(exc)))
+                    page.on('requestfailed', lambda req: diagnostics.append('requestfailed: ' + req.url + ' ' + str(req.failure)))
                     response = page.goto(HOST + '/pdf/')
                     assert response.status == 200
                     assert page.locator('meta[name="robots"]').get_attribute('content') == 'noindex,nofollow'
@@ -57,7 +61,16 @@ def main():
                     pdf = make_pdf()
                     page.locator('#pdf-file').set_input_files({'name': 'test.pdf', 'mimeType': 'application/pdf', 'buffer': pdf})
                     page.locator('#pdf-start').click()
-                    page.locator('#pdf-download').wait_for(state='visible', timeout=120000)
+                    try:
+                        page.wait_for_function("""() => !document.querySelector('#pdf-download').hidden ||
+                            document.querySelector('#pdf-status').dataset.state === 'error'""", timeout=30000)
+                    except Exception:
+                        print('PDF TEST TIMEOUT: status=', page.locator('#pdf-status').inner_text(), flush=True)
+                        print('PDF TEST DIAGNOSTICS:', diagnostics, flush=True)
+                        raise
+                    print('PDF TEST STATUS:', page.locator('#pdf-status').inner_text(), flush=True)
+                    print('PDF TEST DIAGNOSTICS:', diagnostics, flush=True)
+                    assert page.locator('#pdf-download').is_visible(), 'PDF compression failed before download'
                     with page.expect_download() as info:
                         page.locator('#pdf-download').click()
                     data = Path(info.value.path()).read_bytes()
