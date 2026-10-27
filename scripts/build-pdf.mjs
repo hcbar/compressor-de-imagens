@@ -15,6 +15,11 @@ const copyEngine = (dist) => {
     if (statSync(from).size >= 25 * 1024 * 1024) throw new Error('PDF engine exceeds Cloudflare static asset limit');
     copyFileSync(from, join(target, file));
   }
+  mkdirSync(join(dist, 'legal/qpdf'), {recursive:true});
+  mkdirSync(join(dist, 'legal/qpdf-run'), {recursive:true});
+  copyFileSync('legal/qpdf/LICENSE.txt', join(dist, 'legal/qpdf/LICENSE.txt'));
+  copyFileSync('legal/qpdf/NOTICE.md', join(dist, 'legal/qpdf/NOTICE.txt'));
+  copyFileSync('legal/qpdf-run/LICENSE.txt', join(dist, 'legal/qpdf-run/LICENSE.txt'));
   copyFileSync('src/pdf.js', join(dist, 'assets/pdf.js'));
   copyFileSync('src/pdf.css', join(dist, 'assets/pdf.css'));
 };
@@ -100,7 +105,7 @@ export function buildPdfPages({ dist, product, publicIndexable }) {
       '</button><button type="button" id="pdf-cancel" hidden>' + escapeHtml(c.cancel) + '</button></div>' +
       '<p id="pdf-status" role="status" aria-live="polite"></p><p id="pdf-result" aria-live="polite"></p>' +
       '<a id="pdf-download" class="download" hidden>' + escapeHtml(c.download) + '</a></form></section>' +
-      '<p class="note">' + escapeHtml(c.note) + '</p></main><footer><span>Simply Compressor</span></footer>' +
+      '<p class="note">' + escapeHtml(c.note) + '</p><p class="note"><a href="/legal/qpdf/LICENSE.txt">qpdf license</a> · <a href="/legal/qpdf/NOTICE.txt">qpdf notices</a> · <a href="/legal/qpdf-run/LICENSE.txt">qpdf-run license</a></p></main><footer><span>Simply Compressor</span></footer>' +
       '</body></html>';
     writeFileSync(join(dir, 'index.html'), html);
     urls.push(route);
