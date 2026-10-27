@@ -136,12 +136,13 @@ form.addEventListener('submit', async (event) => {
     if (thisGeneration !== generation) return;
     // Never serve an invalid output, even if qpdf produced bytes.
     if (!hasPdfHeader(optimized)) throw new Error('Not a PDF');
-    const checked = await runner.run({
-      inputs: { 'check.pdf': optimized },
-      args: ['--check', 'check.pdf'],
-      outputs: []
+    // qpdf-run 0.2.1 rejects inspection commands without output files.
+    // A second parse-and-write operation confirms the generated PDF is readable.
+    const validated = await runner.runOne({
+      input: optimized, inputName: 'check.pdf', outputName: 'validated.pdf',
+      args: ['--', 'check.pdf', 'validated.pdf']
     });
-    if (checked.exitCode !== 0 || checked.warnings?.length) throw new Error('PDF validation warnings');
+    if (!hasPdfHeader(validated)) throw new Error('PDF revalidation failed');
     if (thisGeneration !== generation) return;
 
     const improved = optimized.byteLength < input.byteLength;
