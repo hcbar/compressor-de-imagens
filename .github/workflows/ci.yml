@@ -28,6 +28,9 @@ jobs:
       - name: "Browser smoke: three locales, actual compression, cancellation"
         run: |
           "$RUNNER_TEMP/microtool-browser-venv/bin/python" tests/browser-smoke.py
+      - name: 'PDF Chromium smoke: local compression and no uploads'
+        run: |
+          "$RUNNER_TEMP/microtool-browser-venv/bin/python" tests/browser-pdf-smoke.py
       - run: npm run manifest
       - name: Assert clean source after verification
         run: git diff --exit-code -- . ':(exclude)wrangler.preview.jsonc' ':(exclude)wrangler.production.jsonc'
