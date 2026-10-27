@@ -3,7 +3,7 @@
 ## Scope
 
 - Three standalone, local-only routes: /pdf/, /pt/pdf/, /es/pdf/.
-- Uses **qpdf-run 0.2.3** (MIT) bundling a qpdf WebAssembly runtime and a Web Worker. Files are never uploaded. No new Worker, API route, tracking or advertising.
+- Uses **qpdf-run 0.2.1** (MIT) bundling a qpdf WebAssembly runtime and a Web Worker. Files are never uploaded. No new Worker, API route, tracking or advertising.
 - Two honest presets:
   1. Preserve quality: lossless Flate recompression and object streams.
   2. Smaller file: above plus qpdf's image optimization, which may convert eligible images to JPEG and reduce visual quality. Text/vectors are not rasterized.
