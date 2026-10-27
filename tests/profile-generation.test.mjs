@@ -10,6 +10,7 @@ test('fresh backend profile generates isolated Worker endpoints and stays noinde
   try {
     for(const item of ['config','scripts','src','worker'])cpSync(item,join(root,item),{recursive:true});
     cpSync('node_modules/qpdf-run',join(root,'node_modules/qpdf-run'),{recursive:true});
+    cpSync('legal',join(root,'legal'),{recursive:true});
     const cfg=join(root,'config/product.json');
     const p=JSON.parse(readFileSync(cfg,'utf8'));
     p.slug='distinct-tool';p.brand='Distinct Tool';p.profile='backend';
