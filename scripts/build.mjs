@@ -1,4 +1,4 @@
-import {rmSync,mkdirSync,writeFileSync,copyFileSync} from 'node:fs';
+import {rmSync,mkdirSync,writeFileSync,copyFileSync,appendFileSync} from 'node:fs';
 import {resolve,join} from 'node:path';
 import {readConfig,checkConfig} from './check.mjs';
 import {buildPdfPages} from './build-pdf.mjs';
@@ -21,6 +21,8 @@ const pdfRoutes = buildPdfPages({dist,product:p,publicIndexable});
 // Cloudflare Static Assets _headers format. Security defaults do not permit external scripts or connections.
 writeFileSync(join(dist,'_headers'),`/*\n  X-Content-Type-Options: nosniff\n  Referrer-Policy: no-referrer\n  Permissions-Policy: camera=(), microphone=(), geolocation=(), payment=()\n  X-Frame-Options: DENY\n  Content-Security-Policy: default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self' blob: data:; connect-src 'self'; font-src 'self'; object-src 'none'; base-uri 'none'; form-action 'self'; frame-ancestors 'none'\n`);
 writeFileSync(join(dist,'robots.txt'),publicIndexable?'User-agent: *\nAllow: /\nSitemap: '+urlBase+'/sitemap.xml\n':'User-agent: *\nDisallow: /\n');
+const pdfWasmCsp = "default-src 'none'; script-src 'self' 'wasm-unsafe-eval'; style-src 'self'; img-src 'self' blob: data:; connect-src 'self'; font-src 'self'; object-src 'none'; base-uri 'none'; form-action 'self'; frame-ancestors 'none'";
+for(const route of ['/pdf/*','/pt/pdf/*','/es/pdf/*','/assets/qpdf/*']) appendFileSync(join(dist,'_headers'),route+'\n  Content-Security-Policy: '+pdfWasmCsp+'\n');
 if(publicIndexable)writeFileSync(join(dist,'sitemap.xml'),'<?xml version="1.0" encoding="UTF-8"?><urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">'+[...p.locales.map(urlFor),...pdfRoutes].map(route=>`<url><loc>${esc(urlBase+route)}</loc></url>`).join('')+'</urlset>');
 for(const kind of ['preview','production']){
   const data={name:p.slug+(kind==='preview'?'-preview':''),compatibility_date:'2026-10-24',workers_dev:true,preview_urls:false,assets:{directory:'./dist',html_handling:'force-trailing-slash'},observability:{enabled:false}};
