@@ -156,7 +156,8 @@ form.addEventListener('submit', async (event) => {
     result.textContent = msg.output + ' ' + getSize(file.size) + ' → ' + getSize(blob.size)
       + (improved ? ' (' + Math.round((1 - blob.size / file.size) * 100) + '% ' + msg.percent + ')' : '');
     showSuccess(improved ? msg.saved : msg.noGain);
-  } catch {
+  } catch (error) {
+    console.error('PDF optimization failed:', error?.code || '', error?.message || String(error));
     if (thisGeneration === generation) showError(msg.failed);
   } finally {
     if (activeRunner === runner) activeRunner = null;
