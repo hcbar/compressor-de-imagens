@@ -119,13 +119,13 @@ def main():
                     assert page.locator('#pdf-download').is_hidden()
 
                     # Matrix: structured PDF must preserve text, links, forms and image objects.
-                    import fitz
+                    from pypdf import PdfReader
+                    from io import BytesIO
                     rich = make_rich_pdf()
-                    original_doc = fitz.open(stream=rich, filetype='pdf')
-                    assert 'Searchable PDF text' in original_doc[0].get_text()
-                    assert len(original_doc[0].get_links()) == 1
-                    assert len(list(original_doc[0].widgets())) == 1
-                    original_doc.close()
+                    original_doc = PdfReader(BytesIO(rich))
+                    assert 'Searchable PDF text' in original_doc.pages[0].extract_text()
+                    assert len(original_doc.pages[0].get('/Annots', [])) == 2
+                    assert original_doc.get_fields()['UserField'].get('/V') == 'Saved value'
                     for mode in ('preserve', 'smaller'):
                         page.locator('#pdf-mode').select_option(mode)
                         page.locator('#pdf-file').set_input_files({'name':'rich.pdf','mimeType':'application/pdf','buffer':rich})
@@ -136,13 +136,12 @@ def main():
                         with page.expect_download() as info: page.locator('#pdf-download').click()
                         out = Path(info.value.path()).read_bytes()
                         assert len(out) <= len(rich)
-                        doc = fitz.open(stream=out, filetype='pdf')
-                        assert len(doc) == 1
-                        assert 'Searchable PDF text' in doc[0].get_text()
-                        assert any(link.get('uri') == 'https://example.org/pdf' for link in doc[0].get_links())
-                        assert any(widget.field_name == 'UserField' and widget.field_value == 'Saved value' for widget in doc[0].widgets())
-                        assert len(doc[0].get_images()) >= 1
-                        doc.close()
+                        doc = PdfReader(BytesIO(out))
+                        assert len(doc.pages) == 1
+                        assert 'Searchable PDF text' in doc.pages[0].extract_text()
+                        assert any(a.get_object().get('/A', {}).get('/URI') == 'https://example.org/pdf' for a in doc.pages[0]['/Annots'])
+                        assert doc.get_fields()['UserField'].get('/V') == 'Saved value'
+                        assert '/XObject' in doc.pages[0]['/Resources']
                     # Signed PDFs must not be modified: intentionally recognizable signature marker.
                     signed = rich + b'\n% /ByteRange [0 10 20 30]\n'
                     page.locator('#pdf-file').set_input_files({'name':'signed.pdf','mimeType':'application/pdf','buffer':signed})
