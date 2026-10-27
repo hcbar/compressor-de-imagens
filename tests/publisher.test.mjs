@@ -18,6 +18,7 @@ test('F2: preview preflight and indexable production validation are independent'
   try {
     for(const item of ['config','scripts','src','worker'])cpSync(item,join(root,item),{recursive:true});
     cpSync('node_modules/qpdf-run',join(root,'node_modules/qpdf-run'),{recursive:true});
+    cpSync('legal',join(root,'legal'),{recursive:true});
     const cfg=join(root,'config/product.json');
     const p=JSON.parse(readFileSync(cfg,'utf8'));
     p.siteUrl='https://tools.example.net/';p.indexable=true;
