@@ -1,3 +1,4 @@
+const failure = (code, stage, message) => Object.assign(new Error(message), {code, stage});
 const MAX_INPUT_BYTES = 25 * 1024 * 1024;
 const MAX_PIXELS = 24_000_000;
 const HEADER_SCAN_BYTES = 256 * 1024;
@@ -14,10 +15,10 @@ async function inspectInput(file) {
   const b = new Uint8Array(await file.slice(0, HEADER_SCAN_BYTES).arrayBuffer());
   let size = null;
   if (file.type === 'image/png') {
-    if (b.length < 24 || ![137,80,78,71,13,10,26,10].every((v,i)=>b[i]===v) || !ascii(b,12,'IHDR')) throw new Error('Invalid PNG header');
+    if (b.length < 24 || ![137,80,78,71,13,10,26,10].every((v,i)=>b[i]===v) || !ascii(b,12,'IHDR')) throw failure('INVALID_IMAGE', 'opening', 'Invalid PNG header');
     size = [uint32BE(b,16),uint32BE(b,20)];
   } else if (file.type === 'image/jpeg') {
-    if (b.length < 4 || b[0]!==0xff || b[1]!==0xd8 || b[2]!==0xff) throw new Error('Invalid JPEG header');
+    if (b.length < 4 || b[0]!==0xff || b[1]!==0xd8 || b[2]!==0xff) throw failure('INVALID_IMAGE', 'opening', 'Invalid JPEG header');
     let pos=2;
     while(pos+3<b.length) {
       if(b[pos]!==0xff) break;
@@ -28,27 +29,27 @@ async function inspectInput(file) {
       if(marker===0x01 || (marker>=0xd0 && marker<=0xd7)) continue;
       if(pos+2>b.length) break;
       const length=uint16BE(b,pos);
-      if(length<2) throw new Error('Invalid JPEG segment');
+      if(length<2) throw failure('INVALID_IMAGE', 'opening', 'Invalid JPEG segment');
       if(pos+length>b.length) break;
       if(isJpegSOF(marker)) {
-        if(length<7) throw new Error('Invalid JPEG size');
+        if(length<7) throw failure('INVALID_IMAGE', 'opening', 'Invalid JPEG size');
         size=[uint16BE(b,pos+3),uint16BE(b,pos+5)]; // height, width
         break;
       }
       pos+=length;
     }
   } else if (file.type === 'image/webp') {
-    if(b.length<20 || !ascii(b,0,'RIFF') || !ascii(b,8,'WEBP')) throw new Error('Invalid WebP header');
+    if(b.length<20 || !ascii(b,0,'RIFF') || !ascii(b,8,'WEBP')) throw failure('INVALID_IMAGE', 'opening', 'Invalid WebP header');
     if(ascii(b,12,'VP8X') && b.length>=30) size=[uint24LE(b,24)+1,uint24LE(b,27)+1];
     else if(ascii(b,12,'VP8L') && b.length>=25 && b[20]===0x2f) size=[1+b[21]+((b[22]&63)<<8),1+(b[22]>>6)+(b[23]<<2)+((b[24]&15)<<10)];
     else if(ascii(b,12,'VP8 ') && b.length>=30 && b[23]===0x9d && b[24]===0x01 && b[25]===0x2a) size=[(b[26]+b[27]*256)&0x3fff,(b[28]+b[29]*256)&0x3fff];
   }
-  if(size && (!size[0] || !size[1] || size[0]*size[1]>MAX_PIXELS)) throw new Error('Image dimensions exceed limit');
+  if(size && (!size[0] || !size[1] || size[0]*size[1]>MAX_PIXELS)) throw failure('PIXEL_LIMIT', 'validation', 'Image dimensions exceed limit');
 }
 
 function encode(canvas, mime, quality) {
   return new Promise((resolve, reject) => {
-    canvas.toBlob(blob => blob?.type === mime ? resolve(blob) : reject(new Error('Unsupported output format: ' + mime)), mime, quality);
+    canvas.toBlob(blob => blob?.type === mime ? resolve(blob) : reject(failure('UNSUPPORTED_OUTPUT', 'conversion', 'Unsupported output format: ' + mime)), mime, quality);
   });
 }
 
@@ -56,20 +57,27 @@ function encode(canvas, mime, quality) {
 // already-running native operations may finish before the caller discards them.
 export async function compressImageToTarget(file, targetBytes, {signal, mode = 'smallest'} = {}) {
   aborted(signal);
-  if (!['smallest','original'].includes(mode)) throw new Error('Invalid output mode');
-  if (!(file instanceof Blob) || !Number.isFinite(targetBytes) || targetBytes < 1024 || targetBytes > 20 * 1024 * 1024) throw new Error('Invalid target');
-  if (file.size > MAX_INPUT_BYTES || !['image/jpeg', 'image/png', 'image/webp'].includes(file.type)) throw new Error('Unsupported file');
-  await inspectInput(file);
+  if (!['smallest','original'].includes(mode)) throw failure('INVALID_MODE', 'validation', 'Invalid output mode');
+  if (!(file instanceof Blob) || !Number.isFinite(targetBytes) || targetBytes < 1024 || targetBytes > 20 * 1024 * 1024) throw failure('INVALID_TARGET', 'validation', 'Invalid target');
+  if (file.size > MAX_INPUT_BYTES) throw failure('FILE_LIMIT', 'validation', 'Unsupported file');
+  if (!['image/jpeg', 'image/png', 'image/webp'].includes(file.type)) throw failure('UNSUPPORTED_INPUT', 'validation', 'Unsupported file');
+  try { await inspectInput(file); }
+  catch (error) {
+    if (typeof error?.code === 'string') throw error;
+    throw failure('INVALID_IMAGE', 'opening', 'Could not read image');
+  }
   aborted(signal);
   // No unchecked JPEG fast-path: even small files must be decoded, dimension-
   // validated and re-encoded, so an invalid payload is not offered as a JPEG.
-  const bitmap = await createImageBitmap(file);
+  let bitmap;
+  try { bitmap = await createImageBitmap(file); }
+  catch { throw failure('DECODE_FAILED', 'opening', 'Image decoder rejected file'); }
   try {
     aborted(signal);
-    if (!bitmap.width || !bitmap.height || bitmap.width * bitmap.height > MAX_PIXELS) throw new Error('Image too large');
+    if (!bitmap.width || !bitmap.height || bitmap.width * bitmap.height > MAX_PIXELS) throw failure('PIXEL_LIMIT', 'validation', 'Image too large');
     const canvas = document.createElement('canvas');
     const ctx = canvas.getContext('2d', {willReadFrequently:true});
-    if (!ctx) throw new Error('Canvas unavailable');
+    if (!ctx) throw failure('CANVAS_UNAVAILABLE', 'conversion', 'Canvas unavailable');
     // Scan original pixels in bounded strips: a scaled scan could miss alpha.
     canvas.width = bitmap.width;
     canvas.height = bitmap.height;
@@ -131,9 +139,9 @@ export async function compressImageToTarget(file, targetBytes, {signal, mode = '
     }
     candidates.sort((a,b) => Number(b.reachedTarget)-Number(a.reachedTarget) ||
       (a.reachedTarget ? b.width*b.height-a.width*a.height : 0) || a.blob.size-b.blob.size);
-    if (!candidates.length) throw new Error('No supported output');
+    if (!candidates.length) throw failure('NO_OUTPUT', 'conversion', 'No supported output');
     aborted(signal);
-    if (mode === 'smallest' && !candidates[0].reachedTarget) throw new Error('Target cannot be reached');
+    if (mode === 'smallest' && !candidates[0].reachedTarget) throw failure('TARGET_UNREACHABLE', 'conversion', 'Target cannot be reached');
     return {...candidates[0], hasTransparency, unchanged:false};
   } finally { bitmap.close(); }
 }

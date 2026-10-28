@@ -12,6 +12,7 @@ HOST = 'http://127.0.0.1:4173'
 
 from browser_smoke_fixture import fixture_png
 from browser_formats import run_format_cases, run_locales
+from browser_privacy import run_network_case, run_diagnostic_cases
 
 def wait_port():
     for _ in range(80):
@@ -31,6 +32,8 @@ def main():
                 browser = p.chromium.launch(executable_path=os.getenv('CHROMIUM_PATH') or None, args=['--no-sandbox'])
                 try:
                     requests = []
+                    run_network_case(browser,HOST)
+                    run_diagnostic_cases(browser,HOST)
                     run_locales(browser,HOST)
                     page = browser.new_page(accept_downloads=True,viewport={'width':390,'height':844})
                     page.on('request', lambda req: requests.append(req.url))

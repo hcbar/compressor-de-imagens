@@ -24,3 +24,13 @@ input[type=file],input[type=number]{display:block;width:100%;padding:14px;border
 footer{max-width:880px;padding:35px 20px;margin:50px auto 0;color:#65746b;font-size:.85rem}
 @media(max-width:600px){main{margin:45px auto}nav{flex-wrap:wrap}nav a{margin-left:8px}.preview-image{max-height:280px}}
 :focus-visible{outline:3px solid #ecb85b;outline-offset:3px}
+#local-privacy{font-size:.9rem;line-height:1.6;margin-top:14px;color:#36554b}
+#local-privacy p{margin:4px 0 8px}
+summary{cursor:pointer;text-decoration:underline;text-underline-offset:3px;color:#24675a}
+#diagnostic-panel{margin:14px 0;font-size:.85rem}
+.diagnostic-actions{display:flex;flex-wrap:wrap;align-items:center;gap:12px}
+#copy-diagnostic{font:inherit;background:#f5f7f4;color:#24675a;border:1px solid #a9c1b7;border-radius:8px;padding:10px 12px;min-height:44px;cursor:pointer}
+#copy-diagnostic:hover{background:#e6efe9}
+#diagnostic-details{margin-top:10px}
+#diagnostic-report{display:block;width:100%;min-height:190px;margin-top:8px;padding:10px;background:#fff;color:#142628;border:1px solid #a9c1b7;border-radius:8px;font-size:12px;resize:vertical}
+#copy-status:empty{display:none}
