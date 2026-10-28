@@ -19,7 +19,7 @@
   "content": {
     "en": {
       "title": "Free Online Image Compressor | Reduce JPG, PNG and WebP",
-      "description": "Choose a size in KB. Reduce JPG, PNG or WebP locally and download the result. No uploads.",
+      "description": "Choose a size in KB. Reduce JPG, PNG or WebP locally and download the result. Files stay on your device.",
       "hero": "Image Compressor",
       "lead": "Reduce photos and images in KB, right in your browser.",
       "upload": "Choose image",
@@ -30,11 +30,19 @@
       "status": "Working...",
       "brand": "Image Compressor",
       "warning": "The image will fit within this size whenever technically possible. Quality, dimensions or format may change.",
-      "previewLabel": "Result preview"
+      "previewLabel": "Result preview",
+      "privacy": "Your files never leave your device.",
+      "privacyDetail": "Images are processed in your browser, without being sent to servers.",
+      "privacyHow": "How local processing works",
+      "privacyExplanation": "Your browser reads the image you choose, compresses it and creates the download on this device. Only the site files are downloaded.",
+      "copyDiagnostic": "Copy diagnostic",
+      "viewDiagnostic": "View diagnostic",
+      "diagnosticCopied": "Diagnostic copied.",
+      "diagnosticCopyFallback": "Copy is unavailable. Select the report and copy it manually."
     },
     "pt": {
       "title": "Compressor de Imagens Online Grátis | Reduzir JPG, PNG e WebP",
-      "description": "Escolha um alvo em KB. Reduza JPG, PNG ou WebP no navegador e baixe o resultado. Sem uploads.",
+      "description": "Escolha um alvo em KB. Reduza JPG, PNG ou WebP no navegador e baixe o resultado. Processamento local.",
       "hero": "Compressor de Imagens",
       "lead": "Reduza fotos e imagens em KB, direto no navegador",
       "upload": "Escolher imagem",
@@ -45,11 +53,19 @@
       "status": "Processando...",
       "brand": "Compressor de Imagens",
       "warning": "A imagem ficará dentro desse limite sempre que tecnicamente possível. A qualidade, as dimensões ou o formato podem mudar.",
-      "previewLabel": "Prévia do resultado"
+      "previewLabel": "Prévia do resultado",
+      "privacy": "Seus arquivos nunca saem do seu dispositivo.",
+      "privacyDetail": "As imagens são processadas no seu navegador, sem serem enviadas aos servidores.",
+      "privacyHow": "Como funciona o processamento local",
+      "privacyExplanation": "O navegador lê a imagem escolhida, comprime e cria o arquivo para baixar neste dispositivo. Apenas os arquivos do site são baixados.",
+      "copyDiagnostic": "Copiar diagnóstico",
+      "viewDiagnostic": "Ver diagnóstico",
+      "diagnosticCopied": "Diagnóstico copiado.",
+      "diagnosticCopyFallback": "Não foi possível copiar. Selecione o relatório e copie manualmente."
     },
     "es": {
       "title": "Compresor de Imágenes Online Gratis | Reducir JPG, PNG y WebP",
-      "description": "Elige un objetivo en KB. Reduce JPG, PNG o WebP en tu navegador y descarga el resultado. Sin subidas.",
+      "description": "Elige un objetivo en KB. Reduce JPG, PNG o WebP en tu navegador y descarga el resultado. Procesamiento local.",
       "hero": "Compresor de Imágenes",
       "lead": "Reduce fotos e imágenes en KB, directamente en tu navegador.",
       "upload": "Elegir imagen",
@@ -60,7 +76,15 @@
       "status": "Procesando...",
       "brand": "Compresor de Imágenes",
       "warning": "La imagen se ajustará a ese límite siempre que sea técnicamente posible. La calidad, dimensiones o formato pueden cambiar.",
-      "previewLabel": "Vista previa del resultado"
+      "previewLabel": "Vista previa del resultado",
+      "privacy": "Tus archivos nunca salen de tu dispositivo.",
+      "privacyDetail": "Las imágenes se procesan en tu navegador, sin enviarse a servidores.",
+      "privacyHow": "Cómo funciona el procesamiento local",
+      "privacyExplanation": "El navegador lee la imagen elegida, la comprime y crea la descarga en este dispositivo. Solo se descargan los archivos del sitio.",
+      "copyDiagnostic": "Copiar diagnóstico",
+      "viewDiagnostic": "Ver diagnóstico",
+      "diagnosticCopied": "Diagnóstico copiado.",
+      "diagnosticCopyFallback": "No se pudo copiar. Selecciona el informe y cópialo manualmente."
     }
   }
 }

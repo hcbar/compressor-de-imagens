@@ -1,4 +1,5 @@
 import { compressImageToTarget } from './image.js';
+import { createDiagnostic } from './diagnostics.js';
 
 const form = document.querySelector('#tool-form');
 const fileInput = document.querySelector('#file');
@@ -14,6 +15,36 @@ const messages = {
   pt: {unsupported:'Este navegador não consegue gerar um formato compatível.',fail:'Não foi possível processar esta imagem.',out:'Resultado',reached:'Meta atingida.',notReached:'Meta não atingida; este é o menor resultado encontrado.',noGain:'O resultado não ficou menor que o original.',alreadySmall:'A imagem já está abaixo do tamanho solicitado.',cannot:'Não foi possível chegar a esse tamanho com esta imagem.',invalid:'Informe um tamanho entre 1 e 20.480 KB.'},
   es: {unsupported:'Este navegador no puede generar un formato compatible.',fail:'No se pudo procesar esta imagen.',out:'Resultado',reached:'Objetivo alcanzado.',notReached:'Objetivo no alcanzado; este es el resultado más pequeño encontrado.',noGain:'El resultado no es menor que el original.',alreadySmall:'La imagen ya es menor que el tamaño solicitado.',cannot:'No se pudo alcanzar este tamaño con esta imagen.',invalid:'Introduce un tamaño entre 1 y 20.480 KB.'}
 }[lang] || {};
+const diagnosticPanel = document.querySelector('#diagnostic-panel');
+const diagnosticReport = document.querySelector('#diagnostic-report');
+const diagnosticDetails = document.querySelector('#diagnostic-details');
+const copyStatus = document.querySelector('#copy-status');
+function showDiagnostic(error, stage) {
+  const report = createDiagnostic(error, stage);
+  document.querySelector('#error-code').textContent = report.code;
+  diagnosticReport.value = JSON.stringify(report, null, 2);
+  diagnosticDetails.open = false;
+  copyStatus.textContent = '';
+  diagnosticPanel.hidden = false;
+}
+function clearDiagnostic() {
+  diagnosticPanel.hidden = true;
+  diagnosticReport.value = '';
+  diagnosticDetails.open = false;
+  copyStatus.textContent = '';
+}
+document.querySelector('#copy-diagnostic').onclick = async () => {
+  const report = diagnosticReport.value;
+  if (!report) return;
+  try {
+    await navigator.clipboard.writeText(report);
+    copyStatus.textContent = diagnosticPanel.dataset.copied;
+  } catch {
+    diagnosticDetails.open = true;
+    diagnosticReport.focus(); diagnosticReport.select();
+    copyStatus.textContent = diagnosticPanel.dataset.fallback;
+  }
+};
 let generation = 0;
 let currentURL = null;
 let controller = null;
@@ -30,6 +61,7 @@ function release() {
   download.removeAttribute('href');
 }
 function invalidate() {
+  clearDiagnostic();
   generation++;
   clearTimeout(debounce);
   controller?.abort();
@@ -67,16 +99,24 @@ async function run(id) {
   const mine = new AbortController();
   controller = mine;
   busy = true;
+  let stage = 'conversion';
   try {
     // Only one native canvas compression at a time. New input invalidates
     // stale output immediately, and queues the latest request.
     const result = await compressImageToTarget(file, targetKB * 1024, {signal:mine.signal});
     if (id !== generation || mine.signal.aborted) return;
     const extension = {'image/jpeg':'jpg','image/webp':'webp','image/png':'png'}[result.blob.type];
-    if (!extension) throw new Error('Unsupported output format: ' + result.blob.type);
+    if (!extension) throw Object.assign(new Error('Unsupported output'), {code:'UNSUPPORTED_OUTPUT'});
+    stage = 'export';
     const url = URL.createObjectURL(result.blob);
     if (id !== generation || mine.signal.aborted) {URL.revokeObjectURL(url);return;}
     currentURL = url;
+    stage = 'rendering';
+    preview.onerror = () => {
+      if (id !== generation) return;
+      release(); status.textContent = messages.fail;
+      showDiagnostic({code:'PREVIEW_FAILED'}, 'rendering');
+    };
     preview.src = url;
     previewPanel.hidden = false;
     download.href = url;
@@ -86,8 +126,12 @@ async function run(id) {
     output.textContent = `${format(file.size)} → ${format(result.blob.size)}${result.unchanged ? ' · ' + messages.alreadySmall : ''}`;
     status.textContent = '';
   } catch (error) {
-    if (id === generation && error?.name !== 'AbortError')
-      status.textContent = error.message === 'Target cannot be reached' ? messages.cannot : error.message?.startsWith('Unsupported output format:') ? messages.unsupported : messages.fail;
+    if (id === generation && error?.name !== 'AbortError') {
+      const report = createDiagnostic(error, stage);
+      status.textContent = report.code === 'IC_TARGET_UNREACHABLE' ? messages.cannot :
+        ['IC_OUTPUT_FORMAT','IC_NO_OUTPUT','IC_CANVAS_UNAVAILABLE'].includes(report.code) ? messages.unsupported : messages.fail;
+      showDiagnostic(error, stage);
+    }
   } finally {
     if (controller === mine) controller = null;
     busy = false;
