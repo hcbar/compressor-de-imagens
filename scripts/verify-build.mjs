@@ -1,3 +1,4 @@
+import {verifyFavicon} from './check-favicon.mjs';
 import {readFileSync,existsSync} from 'node:fs';
 import {readConfig,checkConfig} from './check.mjs';
 const p=readConfig();checkConfig(p);
@@ -10,7 +11,7 @@ for(const lang of p.locales){const path=lang==='en'?'dist/index.html':`dist/${la
 }
 if(!existsSync('dist/favicon.svg')||!existsSync('dist/favicon.ico'))throw new Error('Favicon assets missing');
 if(!readFileSync('dist/favicon.svg','utf8').includes('<svg'))throw new Error('Invalid SVG favicon');
-if(readFileSync('dist/favicon.ico').readUInt16LE(2)!==1)throw new Error('Invalid ICO favicon');
+verifyFavicon('dist/favicon.ico');
 const h=readFileSync('dist/_headers','utf8');if(!h.includes("script-src 'self'")||!h.includes("connect-src 'self'"))throw new Error('CSP weakened');
 if(!existsSync('dist/robots.txt'))throw new Error('robots missing');
 if(target==='production' && p.indexable) {
